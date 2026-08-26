@@ -2,59 +2,34 @@ import type { AltiumPcbDocument } from "../altium-pcb-document"
 import { normalizeAltiumPcbLayerName } from "../pcb-layers"
 
 type PcbLayerGroup = string[]
-type MechanicalLayerSide = "bottom" | "top" | "unpaired"
 
-const SYSTEM_LAYER_GROUPS: PcbLayerGroup[] = [
+const SYSTEM_OVERLAY_LAYER_GROUPS: PcbLayerGroup[] = [
   ["SELECTIONS"],
   ["DRCDETAILMARKERS"],
   ["DRCERRORMARKERS", "DRCERROR"],
-  ["CONNECTIONS"],
   ["PADHOLES"],
   ["VIAHOLES"],
-  ["MULTILAYER"],
 ]
 
-const TOP_SURFACE_LAYER_GROUPS: PcbLayerGroup[] = [
-  ["TOPPADMASTER"],
-  ["TOPOVERLAY"],
-  ["TOPPASTE"],
-  ["TOPSOLDER"],
-  ["KEEPOUT", "KEEPOUTLAYER"],
-  ["DRILLDRAWING"],
-  ["DRILLGUIDE"],
+const SIGNAL_LAYER_NAMES = [
+  "TOP",
+  "TOPLAYER",
+  ...Array.from({ length: 30 }, (_, index) => `MID${index + 1}`),
+  ...Array.from({ length: 30 }, (_, index) => `MIDLAYER${index + 1}`),
+  "BOTTOM",
+  "BOTTOMLAYER",
 ]
 
-const BOTTOM_SURFACE_LAYER_GROUPS: PcbLayerGroup[] = [
-  ["BOTTOMSOLDER"],
-  ["BOTTOMPASTE"],
-  ["BOTTOMOVERLAY"],
-  ["BOTTOMPADMASTER"],
+const INTERNAL_PLANE_LAYER_NAMES = [
+  ...Array.from({ length: 16 }, (_, index) => `PLANE${index + 1}`),
+  ...Array.from({ length: 16 }, (_, index) => `INTERNALPLANE${index + 1}`),
 ]
 
-const BACKGROUND_LAYER_GROUPS: PcbLayerGroup[] = [
-  ["VISIBLEGRID1"],
-  ["VISIBLEGRID2"],
-  ["BACKGROUND"],
+const MECHANICAL_LAYER_NAMES = [
+  "TOPPADMASTER",
+  "BOTTOMPADMASTER",
+  ...Array.from({ length: 32 }, (_, index) => `MECHANICAL${index + 1}`),
 ]
-
-// Altium's IPC Footprint Wizard uses these pairs for top/bottom assembly and
-// courtyard details when a file does not carry descriptive layer names.
-const CONVENTIONAL_TOP_COMPONENT_MECHANICAL_LAYERS = [
-  "MECHANICAL13",
-  "MECHANICAL15",
-]
-const CONVENTIONAL_BOTTOM_COMPONENT_MECHANICAL_LAYERS = [
-  "MECHANICAL12",
-  "MECHANICAL14",
-]
-
-const MECHANICAL_LAYER_SIDE_DRAWING_ORDER: Readonly<
-  Record<MechanicalLayerSide, number>
-> = {
-  top: 0,
-  unpaired: 1,
-  bottom: 2,
-}
 
 const OTHER_LAYER_NAMES: Readonly<Record<number, string>> = {
   6: "TOPOVERLAY",
@@ -81,15 +56,17 @@ const OTHER_LAYER_NAMES: Readonly<Record<number, string>> = {
 }
 
 /**
- * Returns PCB layer groups from front to back. The first group is painted last
- * and therefore appears on top, matching Altium's Layer Drawing Order list.
- * The fallback is a front-side view: it uses the document's physical copper
- * stack and places recognized top/bottom component layers on the matching side.
+ * Returns layer groups from front to back. The first group is painted last and
+ * appears on top. The default groups follow Altium Designer's system Layer
+ * Drawing Order. Altium keeps the active layer in its own group; a static SVG
+ * defaults that active layer to Top Layer unless the caller supplies another.
  */
 export function getPcbLayerDrawingOrder({
+  currentLayer = "TOP",
   document,
   layerDrawingOrder,
 }: {
+  currentLayer?: string
   document: AltiumPcbDocument
   layerDrawingOrder?: readonly string[]
 }): PcbLayerGroup[] {
@@ -101,109 +78,33 @@ export function getPcbLayerDrawingOrder({
     return configuredLayerGroups
   }
 
-  const systemLayerGroups = cloneLayerGroups(SYSTEM_LAYER_GROUPS)
-  const topSurfaceLayerGroups = cloneLayerGroups(TOP_SURFACE_LAYER_GROUPS)
-  const mechanicalLayerGroups = getMechanicalLayerGroups(document)
-  const frontMechanicalLayerGroups = mechanicalLayerGroups.filter(
-    (layerNames) => getMechanicalLayerSide(layerNames) !== "bottom",
-  )
-  const bottomMechanicalLayerGroups = mechanicalLayerGroups.filter(
-    (layerNames) => getMechanicalLayerSide(layerNames) === "bottom",
-  )
-  const copperLayerGroups = getCopperLayerGroups(document)
-  const bottomSurfaceLayerGroups = cloneLayerGroups(BOTTOM_SURFACE_LAYER_GROUPS)
-  const backgroundLayerGroups = cloneLayerGroups(BACKGROUND_LAYER_GROUPS)
-  const knownLayerGroups = [
-    ...systemLayerGroups,
-    ...topSurfaceLayerGroups,
-    ...frontMechanicalLayerGroups,
-    ...copperLayerGroups,
-    ...bottomMechanicalLayerGroups,
-    ...bottomSurfaceLayerGroups,
-    ...backgroundLayerGroups,
+  const signalLayerGroup = [...SIGNAL_LAYER_NAMES]
+  const internalPlaneLayerGroup = [...INTERNAL_PLANE_LAYER_NAMES]
+  const mechanicalLayerGroup = [...MECHANICAL_LAYER_NAMES]
+  const layerGroups = [
+    ...cloneLayerGroups(SYSTEM_OVERLAY_LAYER_GROUPS),
+    ["MULTILAYER"],
+    ["TOPOVERLAY"],
+    ["BOTTOMOVERLAY"],
+    ["CONNECTIONS"],
+    [currentLayer],
+    signalLayerGroup,
+    ["TOPPASTE"],
+    ["BOTTOMPASTE"],
+    ["TOPSOLDER"],
+    ["BOTTOMSOLDER"],
+    internalPlaneLayerGroup,
+    ["DRILLGUIDE"],
+    ["KEEPOUT", "KEEPOUTLAYER"],
+    mechanicalLayerGroup,
+    ["DRILLDRAWING"],
+    ["VISIBLEGRID1", "VISIBLEGRID2"],
+    ["BACKGROUND"],
   ]
 
-  addLayerStackAliases(document, knownLayerGroups)
-  const unknownLayerGroups = getUnknownLayerGroups(document, knownLayerGroups)
-
-  return [
-    ...systemLayerGroups,
-    ...topSurfaceLayerGroups,
-    ...frontMechanicalLayerGroups,
-    ...unknownLayerGroups,
-    ...copperLayerGroups,
-    ...bottomMechanicalLayerGroups,
-    ...bottomSurfaceLayerGroups,
-    ...backgroundLayerGroups,
-  ]
-}
-
-function getMechanicalLayerGroups(
-  document: AltiumPcbDocument,
-): PcbLayerGroup[] {
-  const layerGroups = Array.from({ length: 32 }, (_, index) => [
-    `MECHANICAL${index + 1}`,
-  ])
   addLayerStackAliases(document, layerGroups)
-
-  return layerGroups.toSorted(
-    (leftGroup, rightGroup) =>
-      MECHANICAL_LAYER_SIDE_DRAWING_ORDER[getMechanicalLayerSide(leftGroup)] -
-      MECHANICAL_LAYER_SIDE_DRAWING_ORDER[getMechanicalLayerSide(rightGroup)],
-  )
-}
-
-function getMechanicalLayerSide(layerNames: string[]): MechanicalLayerSide {
-  const normalizedLayerNames = layerNames.map(normalizeAltiumPcbLayerName)
-  if (
-    normalizedLayerNames.some((layerName) =>
-      namesBoardSide(layerName, "TOP"),
-    ) ||
-    normalizedLayerNames.some((layerName) =>
-      CONVENTIONAL_TOP_COMPONENT_MECHANICAL_LAYERS.includes(layerName),
-    )
-  ) {
-    return "top"
-  }
-  if (
-    normalizedLayerNames.some((layerName) =>
-      namesBoardSide(layerName, "BOTTOM"),
-    ) ||
-    normalizedLayerNames.some((layerName) =>
-      CONVENTIONAL_BOTTOM_COMPONENT_MECHANICAL_LAYERS.includes(layerName),
-    )
-  ) {
-    return "bottom"
-  }
-  return "unpaired"
-}
-
-function namesBoardSide(layerName: string, side: "TOP" | "BOTTOM"): boolean {
-  return layerName.startsWith(side) || layerName.endsWith(side)
-}
-
-function getCopperLayerGroups(document: AltiumPcbDocument): PcbLayerGroup[] {
-  const stackLayerGroups =
-    document.board?.layerStack.entries.flatMap((entry) => {
-      const canonicalLayerName = getCanonicalLayerNameFromStackId(entry.layerId)
-      if (!canonicalLayerName || !isCopperLayer(canonicalLayerName)) return []
-      return [[canonicalLayerName]]
-    }) ?? []
-
-  if (stackLayerGroups.length > 0) return deduplicateGroups(stackLayerGroups)
-
-  return [
-    ["TOP", "TOPLAYER"],
-    ...Array.from({ length: 30 }, (_, index) => [
-      `MID${index + 1}`,
-      `MIDLAYER${index + 1}`,
-    ]),
-    ...Array.from({ length: 16 }, (_, index) => [
-      `PLANE${index + 1}`,
-      `INTERNALPLANE${index + 1}`,
-    ]),
-    ["BOTTOM", "BOTTOMLAYER"],
-  ]
+  mechanicalLayerGroup.push(...getUnknownLayerNames(document, layerGroups))
+  return layerGroups
 }
 
 function addLayerStackAliases(
@@ -230,10 +131,10 @@ function addLayerStackAliases(
   }
 }
 
-function getUnknownLayerGroups(
+function getUnknownLayerNames(
   document: AltiumPcbDocument,
   knownLayerGroups: PcbLayerGroup[],
-): PcbLayerGroup[] {
+): string[] {
   const knownLayerNames = new Set(
     knownLayerGroups.flat().map(getPcbLayerDrawingOrderKey),
   )
@@ -248,9 +149,7 @@ function getUnknownLayerGroups(
     }
   }
 
-  return [...unknownLayerNames]
-    .sort((left, right) => left.localeCompare(right))
-    .map((layerName) => [layerName])
+  return [...unknownLayerNames].sort((left, right) => left.localeCompare(right))
 }
 
 function getCanonicalLayerNameFromStackId(
@@ -274,24 +173,6 @@ function getCanonicalLayerNameFromStackId(
   }
   if (family === 0x103) return OTHER_LAYER_NAMES[ordinal]
   return undefined
-}
-
-function isCopperLayer(layerName: string): boolean {
-  return (
-    layerName === "TOP" ||
-    layerName === "BOTTOM" ||
-    layerName.startsWith("MID") ||
-    layerName.startsWith("INTERNALPLANE")
-  )
-}
-
-function deduplicateGroups(layerGroups: PcbLayerGroup[]): PcbLayerGroup[] {
-  const seenLayerNames = new Set<string>()
-  return layerGroups.filter(([layerName]) => {
-    if (!layerName || seenLayerNames.has(layerName)) return false
-    seenLayerNames.add(layerName)
-    return true
-  })
 }
 
 function cloneLayerGroups(layerGroups: PcbLayerGroup[]): PcbLayerGroup[] {

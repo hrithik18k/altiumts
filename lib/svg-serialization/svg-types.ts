@@ -38,8 +38,13 @@ export interface AltiumPcbViewBox {
 export interface AltiumPcbSvgOptions extends AltiumSvgRenderOptions {
   componentIndices?: number[]
   /**
-   * Layer names from front to back. The first layer renders on top, matching
-   * Altium's Layer Drawing Order preference.
+   * Active PCB layer. Altium draws this at its Current Layer priority; static
+   * SVG rendering defaults to Top Layer.
+   */
+  currentLayer?: string
+  /**
+   * Layer names from front to back. This replaces Altium's default grouped
+   * drawing order; the first layer renders on top.
    */
   layerDrawingOrder?: string[]
   layers?: string[]

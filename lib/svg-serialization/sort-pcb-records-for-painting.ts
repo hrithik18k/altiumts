@@ -21,15 +21,18 @@ const PCB_RECORD_KIND_PAINT_ORDER: Readonly<Record<string, number>> = {
 }
 
 export function sortPcbRecordsForPainting({
+  currentLayer,
   document,
   layerDrawingOrder,
   records,
 }: {
+  currentLayer?: string
   document: AltiumPcbDocument
   layerDrawingOrder?: readonly string[]
   records: AltiumRecord[]
 }): AltiumRecord[] {
   const layerGroups = getPcbLayerDrawingOrder({
+    currentLayer,
     document,
     layerDrawingOrder,
   })
@@ -56,7 +59,10 @@ function getLayerPaintPriorities(
   for (const [groupIndex, layerNames] of layerGroups.entries()) {
     const paintPriority = layerGroups.length - groupIndex
     for (const layerName of layerNames) {
-      priorities[getPcbLayerDrawingOrderKey(layerName)] = paintPriority
+      const layerDrawingOrderKey = getPcbLayerDrawingOrderKey(layerName)
+      // Current Layer also belongs to its ordinary Altium category. Preserve
+      // its first, higher-priority occurrence in the drawing-order list.
+      priorities[layerDrawingOrderKey] ??= paintPriority
     }
   }
 

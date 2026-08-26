@@ -75,6 +75,7 @@ export function serializeAltiumPcbToSvg(
   }
 
   const records = sortPcbRecordsForPainting({
+    currentLayer: options.currentLayer,
     document,
     layerDrawingOrder: options.layerDrawingOrder,
     records: document.records

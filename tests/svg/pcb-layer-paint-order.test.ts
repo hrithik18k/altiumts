@@ -2,39 +2,78 @@ import { expect, test } from "bun:test"
 import { parseAltiumPcbDoc, serializeAltiumPcbToSvg } from "../../lib"
 
 const source = [
-  "|RECORD=Board|VX0=0mil|VY0=0mil|VX1=2000mil|VY1=0mil|VX2=2000mil|VY2=500mil|VX3=0mil|VY3=500mil|VX4=0mil|VY4=0mil",
-  "|RECORD=Track|LAYER=MECHANICAL14|X1=250mil|Y1=100mil|X2=250mil|Y2=400mil|WIDTH=80mil",
-  "|RECORD=Track|LAYER=MECHANICAL15|X1=100mil|Y1=250mil|X2=400mil|Y2=250mil|WIDTH=80mil",
-  "|RECORD=Track|LAYER=MECHANICAL15|X1=600mil|Y1=250mil|X2=900mil|Y2=250mil|WIDTH=80mil",
-  "|RECORD=Track|LAYER=MECHANICAL16|X1=750mil|Y1=100mil|X2=750mil|Y2=400mil|WIDTH=80mil",
-  "|RECORD=Fill|LAYER=TOP|X1=1100mil|Y1=150mil|X2=1400mil|Y2=350mil",
-  "|RECORD=Track|LAYER=BOTTOM|X1=1250mil|Y1=100mil|X2=1250mil|Y2=400mil|WIDTH=80mil",
-  "|RECORD=Track|LAYER=MULTILAYER|X1=1750mil|Y1=100mil|X2=1750mil|Y2=400mil|WIDTH=80mil",
-  "|RECORD=Fill|LAYER=TOP|X1=1600mil|Y1=150mil|X2=1900mil|Y2=350mil",
+  "|RECORD=Board|VX0=0mil|VY0=0mil|VX1=4200mil|VY1=0mil|VX2=4200mil|VY2=500mil|VX3=0mil|VY3=500mil|VX4=0mil|VY4=0mil",
+  "|RECORD=Track|LAYER=VISIBLEGRID1|X1=4000mil|Y1=100mil|X2=4000mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=DRILLDRAWING|X1=3700mil|Y1=100mil|X2=3700mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=MECHANICAL15|X1=3400mil|Y1=100mil|X2=3400mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=KEEPOUT|X1=3100mil|Y1=100mil|X2=3100mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=DRILLGUIDE|X1=2800mil|Y1=100mil|X2=2800mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=INTERNALPLANE1|X1=2500mil|Y1=100mil|X2=2500mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=BOTTOMSOLDER|X1=2200mil|Y1=100mil|X2=2200mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=TOPSOLDER|X1=1900mil|Y1=100mil|X2=1900mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=BOTTOMPASTE|X1=1600mil|Y1=100mil|X2=1600mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=TOPPASTE|X1=1300mil|Y1=100mil|X2=1300mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=BOTTOM|X1=1000mil|Y1=100mil|X2=1000mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Fill|LAYER=TOP|X1=850mil|Y1=150mil|X2=1150mil|Y2=350mil",
+  "|RECORD=Track|LAYER=CONNECTIONS|X1=700mil|Y1=100mil|X2=700mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=BOTTOMOVERLAY|X1=400mil|Y1=100mil|X2=400mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=TOPOVERLAY|X1=250mil|Y1=100mil|X2=550mil|Y2=400mil|WIDTH=80mil",
+  "|RECORD=Track|LAYER=MULTILAYER|X1=100mil|Y1=100mil|X2=100mil|Y2=400mil|WIDTH=80mil",
 ].join("\n")
 
-test("renders PCB layers in front-view drawing order", async () => {
+function getSvgLayerIndex(svg: string, layerName: string): number {
+  return svg.indexOf(`data-layer="${layerName}"`)
+}
+
+test("renders PCB layers in Altium's default drawing order", async () => {
   const document = parseAltiumPcbDoc(source)
   const svg = serializeAltiumPcbToSvg(document, {
-    title: "PCB layer paint order",
+    title: "Altium default PCB layer drawing order",
   })
-  const standardBottomCourtyardIndex = svg.indexOf('data-layer="MECHANICAL14"')
-  const legacyBottomCourtyardIndex = svg.indexOf('data-layer="MECHANICAL16"')
-  const firstTopCourtyardIndex = svg.indexOf('data-layer="MECHANICAL15"')
-  const bottomTrackIndex = svg.indexOf(
-    'data-record="Track" data-layer="BOTTOM"',
+  expect(getSvgLayerIndex(svg, "VISIBLEGRID1")).toBeLessThan(
+    getSvgLayerIndex(svg, "DRILLDRAWING"),
   )
-  const topFillIndex = svg.indexOf('data-record="Fill" data-layer="TOP"')
-  const lastTopFillIndex = svg.lastIndexOf(
-    'data-record="Fill" data-layer="TOP"',
+  expect(getSvgLayerIndex(svg, "DRILLDRAWING")).toBeLessThan(
+    getSvgLayerIndex(svg, "MECHANICAL15"),
   )
-  const multiLayerTrackIndex = svg.indexOf(
-    'data-record="Track" data-layer="MULTILAYER"',
+  expect(getSvgLayerIndex(svg, "MECHANICAL15")).toBeLessThan(
+    getSvgLayerIndex(svg, "KEEPOUT"),
   )
-
-  expect(standardBottomCourtyardIndex).toBeLessThan(firstTopCourtyardIndex)
-  expect(legacyBottomCourtyardIndex).toBeLessThan(firstTopCourtyardIndex)
-  expect(bottomTrackIndex).toBeLessThan(topFillIndex)
-  expect(lastTopFillIndex).toBeLessThan(multiLayerTrackIndex)
+  expect(getSvgLayerIndex(svg, "KEEPOUT")).toBeLessThan(
+    getSvgLayerIndex(svg, "DRILLGUIDE"),
+  )
+  expect(getSvgLayerIndex(svg, "DRILLGUIDE")).toBeLessThan(
+    getSvgLayerIndex(svg, "INTERNALPLANE1"),
+  )
+  expect(getSvgLayerIndex(svg, "INTERNALPLANE1")).toBeLessThan(
+    getSvgLayerIndex(svg, "BOTTOMSOLDER"),
+  )
+  expect(getSvgLayerIndex(svg, "BOTTOMSOLDER")).toBeLessThan(
+    getSvgLayerIndex(svg, "TOPSOLDER"),
+  )
+  expect(getSvgLayerIndex(svg, "TOPSOLDER")).toBeLessThan(
+    getSvgLayerIndex(svg, "BOTTOMPASTE"),
+  )
+  expect(getSvgLayerIndex(svg, "BOTTOMPASTE")).toBeLessThan(
+    getSvgLayerIndex(svg, "TOPPASTE"),
+  )
+  expect(getSvgLayerIndex(svg, "TOPPASTE")).toBeLessThan(
+    getSvgLayerIndex(svg, "BOTTOM"),
+  )
+  expect(getSvgLayerIndex(svg, "BOTTOM")).toBeLessThan(
+    getSvgLayerIndex(svg, "TOP"),
+  )
+  expect(getSvgLayerIndex(svg, "TOP")).toBeLessThan(
+    getSvgLayerIndex(svg, "CONNECTIONS"),
+  )
+  expect(getSvgLayerIndex(svg, "CONNECTIONS")).toBeLessThan(
+    getSvgLayerIndex(svg, "BOTTOMOVERLAY"),
+  )
+  expect(getSvgLayerIndex(svg, "BOTTOMOVERLAY")).toBeLessThan(
+    getSvgLayerIndex(svg, "TOPOVERLAY"),
+  )
+  expect(getSvgLayerIndex(svg, "TOPOVERLAY")).toBeLessThan(
+    getSvgLayerIndex(svg, "MULTILAYER"),
+  )
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
