@@ -443,7 +443,7 @@ function renderSchematicPin(
     anchor: string,
   ): string =>
     text
-      ? `<text x="0" y="0" fill="${color}" ${font.attributes} text-anchor="${anchor}" dominant-baseline="text-after-edge" transform="translate(${formatSvgNumber(position.x)} ${formatSvgNumber(position.y)}) rotate(${rotation})">${escapeXml(text)}</text>`
+      ? `<text x="0" y="0" fill="${color}" ${font.attributes} text-anchor="${anchor}" dominant-baseline="central" transform="translate(${formatSvgNumber(position.x)} ${formatSvgNumber(position.y)}) rotate(${rotation})">${escapeXml(text)}</text>`
       : ""
 
   return `<g ${metadata}><line x1="${formatSvgNumber(pinEdgeSymbols.lineStartPosition.x)}" y1="${formatSvgNumber(pinEdgeSymbols.lineStartPosition.y)}" x2="${formatSvgNumber(connection.x)}" y2="${formatSvgNumber(connection.y)}" stroke="${color}" stroke-width="1"/>${pinEdgeSymbols.svg}${showDesignator ? renderPinText(designator, designatorPosition, designatorAnchor) : ""}${showName ? renderPinText(name, namePosition, nameAnchor) : ""}</g>`

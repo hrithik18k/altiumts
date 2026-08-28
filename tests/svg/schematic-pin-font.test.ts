@@ -14,6 +14,7 @@ test("renders schematic pin text with its sheet font", async () => {
   expect(svg).toContain(
     'font-family="Helvetica" font-size="4" font-style="italic" font-weight="bold"',
   )
+  expect(svg.match(/dominant-baseline="central"/g)).toHaveLength(2)
   expect(svg).not.toContain('font-size="6"')
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
