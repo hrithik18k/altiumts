@@ -12,5 +12,5 @@ test("renders FPGA1394 S02 component display modes with sheet connections", asyn
   })
 
   expect(document.getBytes()).toEqual(source)
-  await expect(svg).toMatchSvgSnapshot(import.meta.path)
+  await expect(svg).toMatchSvgSnapshot(import.meta.path, "after")
 }, 30_000)
