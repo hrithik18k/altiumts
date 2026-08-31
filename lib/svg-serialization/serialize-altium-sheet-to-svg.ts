@@ -632,6 +632,9 @@ function shouldRenderSchematicRecord(
         ownerPartId <= 0 ||
         ownerPartId === currentPartId
       const displayModeMatches =
+        (ownerPartId !== undefined &&
+          ownerPartId <= 0 &&
+          ownerPartDisplayMode === undefined) ||
         (ownerPartDisplayMode ?? 0) === currentDisplayMode
       return partMatches && displayModeMatches
     }
