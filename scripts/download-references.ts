@@ -25,6 +25,13 @@ type NestedZipBundleSpec = {
 
 const references: DirectReferenceSpec[] = [
   {
+    filename: "fpga1394-s02.SchDoc",
+    sha256: "5d80c91889d92551b87c09cf3f269db325c8d8b2751ea885c533ce3dd2c0e43b",
+    source:
+      "jhu-cisst/FPGA1394@b0a9dbfd8af3fb902fd05d26375927e0d125713d (BSD-3-Clause)",
+    url: "https://raw.githubusercontent.com/jhu-cisst/FPGA1394/b0a9dbfd8af3fb902fd05d26375927e0d125713d/S02.SchDoc",
+  },
+  {
     filename: "stm32-st-link-v2.SchDoc",
     sha256: "e571d8b66e23d73ebc7ecac53d17c116194c6117f534947d420fef87c6cd50c2",
     source:

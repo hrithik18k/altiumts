@@ -2,6 +2,10 @@
 
 Run `bun run download-references` to download:
 
+- `fpga1394-s02.SchDoc` from the BSD-3-Clause-licensed
+  [`jhu-cisst/FPGA1394`](https://github.com/jhu-cisst/FPGA1394) open-source
+  hardware repository, pinned to commit
+  `b0a9dbfd8af3fb902fd05d26375927e0d125713d`.
 - `stm32-st-link-v2.SchDoc` from the GPL-3.0-licensed
   [`yasir-shahzad/STM32-ST-Link-V2.0-Programmer`](https://github.com/yasir-shahzad/STM32-ST-Link-V2.0-Programmer)
   open-source hardware repository, pinned to commit
