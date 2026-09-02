@@ -43,6 +43,56 @@ interface SchematicPinRenderContext {
   viewport: SvgViewport
 }
 
+const ALTIUM_STANDARD_SHEET_SIZES: ReadonlyArray<readonly [number, number]> = [
+  // A4-A0, ANSI A-E, Letter/Legal/Tabloid, and OrCAD A-E.
+  [1150, 760],
+  [1550, 1110],
+  [2230, 1570],
+  [3150, 2230],
+  [4460, 3150],
+  [950, 750],
+  [1500, 950],
+  [2000, 1500],
+  [3200, 2000],
+  [4200, 3200],
+  [1100, 850],
+  [1400, 850],
+  [1700, 1100],
+  [990, 790],
+  [1540, 990],
+  [2060, 1560],
+  [3260, 2060],
+  [4280, 3280],
+]
+
+function getSchematicSheetSize(
+  sheetRecord: AltiumSchSheetRecord | undefined,
+): readonly [number, number] {
+  const customWidth = Number(sheetRecord?.getCaseInsensitive("CUSTOMX") ?? 1000)
+  const customHeight = Number(sheetRecord?.getCaseInsensitive("CUSTOMY") ?? 800)
+  const sheetStyleValue = sheetRecord?.getCaseInsensitive("SHEETSTYLE")
+  const useCustomSheet =
+    sheetRecord?.getCaseInsensitive("USECUSTOMSHEET") === "T"
+  const standardSize =
+    sheetStyleValue === undefined
+      ? undefined
+      : ALTIUM_STANDARD_SHEET_SIZES[Number(sheetStyleValue)]
+  let [width, height] =
+    useCustomSheet || !standardSize ? [customWidth, customHeight] : standardSize
+
+  if (
+    !useCustomSheet &&
+    standardSize &&
+    Number(sheetRecord?.getCaseInsensitive("WORKSPACEORIENTATION") ?? 0) !== 0
+  ) {
+    const previousWidth = width
+    width = height
+    height = previousWidth
+  }
+
+  return [Math.max(width, 1), Math.max(height, 1)]
+}
+
 export function serializeAltiumSheetToSvg(
   source: AltiumPcbDoc | AltiumSchDoc | AltiumLine[],
   options: AltiumSheetSvgOptions = {},
@@ -62,14 +112,7 @@ export function serializeAltiumSheetToSvg(
   const sheetRecord = records.find(
     (record): record is AltiumSchSheetRecord => record.recordKind === "31",
   )
-  const sheetWidth = Math.max(
-    Number(sheetRecord?.getCaseInsensitive("CUSTOMX") ?? 1000),
-    1,
-  )
-  const sheetHeight = Math.max(
-    Number(sheetRecord?.getCaseInsensitive("CUSTOMY") ?? 800),
-    1,
-  )
+  const [sheetWidth, sheetHeight] = getSchematicSheetSize(sheetRecord)
   const paperBounds: SvgBounds = {
     minX: 0,
     minY: 0,
