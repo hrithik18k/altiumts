@@ -53,6 +53,17 @@ test("rotates standard sheet dimensions for portrait orientation", () => {
   )
 })
 
+test("rejects an unknown predefined sheet style", () => {
+  const invalidSheet = [
+    "|HEADER=Protel for Windows - Schematic Capture Ascii File Version 5.0",
+    "|RECORD=31|SHEETSTYLE=99|CUSTOMX=1500|CUSTOMY=950",
+  ].join("\n")
+
+  expect(() =>
+    serializeAltiumSheetToSvg(parseAltiumAscii(invalidSheet)),
+  ).toThrow('Unsupported Altium schematic sheet style: "99"')
+})
+
 test("renders an explicit schematic region containing off-sheet records", async () => {
   const svg = serializeAltiumSheetToSvg(parseAltiumAscii(source), {
     height: 600,
