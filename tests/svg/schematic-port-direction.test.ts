@@ -24,11 +24,11 @@ function renderPort(fields: string, connections: string[] = []) {
   const port = records.find((record) => record.recordKind === "18")
   if (!port) throw new Error("Missing test port")
   return {
-    direction: getSchematicPortDirection(
-      port,
-      getSchematicConnectionSegments(records),
-      40,
-    ),
+    direction: getSchematicPortDirection({
+      record: port,
+      segments: getSchematicConnectionSegments(records),
+      width: 40,
+    }),
     svg: serializeAltiumSheetToSvg(lines, { margin: 0, showBorder: false }),
   }
 }

@@ -8,12 +8,18 @@ import type { SvgPoint } from "./svg-types"
 
 export type SchematicConnectionSegment = { start: SvgPoint; end: SvgPoint }
 
+interface GetSchematicPortDirectionParams {
+  record: AltiumRecord
+  segments: SchematicConnectionSegment[]
+  width: number
+}
+
 /** Port styles 0–3 are horizontal; 4–7 are their vertical counterparts. */
-export function getSchematicPortDirection(
-  record: AltiumRecord,
-  segments: SchematicConnectionSegment[],
-  width: number,
-) {
+export function getSchematicPortDirection({
+  record,
+  segments,
+  width,
+}: GetSchematicPortDirectionParams) {
   const style = record.getNumber("STYLE") ?? 0
   const vertical = style >= 4 && style <= 7
   const start = {

@@ -288,11 +288,11 @@ function renderSchematicRecord(
     const height = Math.max(getSchematicCoordinate(record, "HEIGHT", 10), 4)
     const halfHeight = height / 2
     const pointDepth = Math.min(width * 0.22, height)
-    const { pointAtStart, pointAtEnd, vertical } = getSchematicPortDirection(
+    const { pointAtStart, pointAtEnd, vertical } = getSchematicPortDirection({
       record,
-      context.portConnectionSegments ?? [],
+      segments: context.portConnectionSegments ?? [],
       width,
-    )
+    })
     const name = record.getDecoded("NAME") ?? ""
     const font = getSchematicFont({
       fallbackSize: 8,
