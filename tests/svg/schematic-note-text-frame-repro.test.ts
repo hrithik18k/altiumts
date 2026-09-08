@@ -1,13 +1,18 @@
 import { expect, test } from "bun:test"
 import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "../../lib"
+import {
+  parseAltiumAscii,
+  parseAltiumSchDoc,
+  serializeAltiumSheetToSvg,
+} from "../../lib"
 
 test("reproduces multiline schematic note text from the PiDP-11 I/O Expander", async () => {
   const source = await readFile(
     resolve(import.meta.dir, "..", "fixtures", "pidp11-io-expander.SchDoc"),
   )
   const document = parseAltiumSchDoc(source)
+  const sheet = document.records.find((record) => record.recordKind === "31")
   const note = document.records.find(
     (record) =>
       record.recordKind === "209" &&
@@ -16,12 +21,14 @@ test("reproduces multiline schematic note text from the PiDP-11 I/O Expander", a
         ?.startsWith("Single board operation is assumed by default.~1"),
   )
 
+  expect(sheet).toBeDefined()
   expect(note).toBeDefined()
   expect(document.getBytes()).toEqual(source)
 
-  const svg = serializeAltiumSheetToSvg(document, {
-    title: "PiDP-11 I/O Expander multiline note reproduction",
-  })
+  const focusedDocument = parseAltiumAscii(
+    [sheet?.getString(), note?.getString()].join("\n"),
+  )
+  const svg = serializeAltiumSheetToSvg(focusedDocument)
 
   expect(svg).toContain('data-record="209"')
   expect(svg).toContain("~1")
