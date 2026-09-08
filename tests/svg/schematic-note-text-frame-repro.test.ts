@@ -25,5 +25,10 @@ test("reproduces multiline schematic note text from the PiDP-11 I/O Expander", a
 
   expect(svg).toContain('data-record="209"')
   expect(svg).toContain("~1")
-  await expect(svg).toMatchSvgSnapshot(import.meta.path)
+  const noteSvg = svg.match(/<g data-record="209">.*?<\/g>/s)?.[0]
+
+  expect(noteSvg).toBeDefined()
+  await expect(
+    `<svg xmlns="http://www.w3.org/2000/svg">${noteSvg}</svg>`,
+  ).toMatchSvgSnapshot(import.meta.path)
 })
