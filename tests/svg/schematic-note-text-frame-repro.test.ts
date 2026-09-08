@@ -29,6 +29,6 @@ test("reproduces multiline schematic note text from the PiDP-11 I/O Expander", a
 
   expect(noteSvg).toBeDefined()
   await expect(
-    `<svg xmlns="http://www.w3.org/2000/svg"><title>PiDP-11 multiline note</title>${noteSvg}</svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="90" viewBox="898.5 698.5 200 90"><title>PiDP-11 multiline note</title>${noteSvg}</svg>`,
   ).toMatchSvgSnapshot(import.meta.path)
 })
