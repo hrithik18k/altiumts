@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="688" viewBox="0 0 321 221" role="img" aria-label="Multiline schematic note text-frame reproduction" class="altium-sheet" data-renderer="altiumts">
+  <title>Multiline schematic note text-frame reproduction</title>
+  <rect width="100%" height="100%" fill="#000000"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <defs><clipPath id="altium-sheet-paper"><rect x="10.5" y="10.5" width="300" height="200"/></clipPath></defs>
+    <g data-record="SheetBorder" fill="#fffef8" stroke="#334155" stroke-width="1"><rect x="10.5" y="10.5" width="300" height="200"/><rect x="20.5" y="20.5" width="280" height="180" fill="none"/><path d="M 67.1667 10.5 V 20.5 M 67.1667 200.5 V 210.5"/><path d="M 113.8333 10.5 V 20.5 M 113.8333 200.5 V 210.5"/><path d="M 160.5 10.5 V 20.5 M 160.5 200.5 V 210.5"/><path d="M 207.1667 10.5 V 20.5 M 207.1667 200.5 V 210.5"/><path d="M 253.8333 10.5 V 20.5 M 253.8333 200.5 V 210.5"/><path d="M 10.5 65.5 H 20.5 M 300.5 65.5 H 310.5"/><path d="M 10.5 110.5 H 20.5 M 300.5 110.5 H 310.5"/><path d="M 10.5 155.5 H 20.5 M 300.5 155.5 H 310.5"/></g>
+    <g data-sheet-content="true" clip-path="url(#altium-sheet-paper)">
+    <g data-record="209"><rect x="50.5" y="52.5" width="180" height="118" fill="#ffff96" stroke="#1f2937"/><text x="56.5" y="66.5" fill="#1f2937" font-family="Arial, sans-serif" font-size="9">[page 17 of 21 - PDF]~1~1- Create: SOT.SchLib~1~1- No footprint: J19, J32, J33, X1</text></g>
+    </g>
+  </g>
+</svg>
